@@ -1,18 +1,18 @@
 <?php
 //информация о системе - информация о размере доски и о типе системы хранения
-//подключение модуля для работы с Redis
-require __DIR__ . '/predis/autoload.php';
-Predis\Autoloader::register();
 
 //класс для работы с хранилищами данных
 class Source{
     protected $systemFile;
-    protected $pieces;
     protected $systemPath;
     protected $dataSourcePath;
     protected $redis;
     protected $redisKey;
     protected $typeSource;
+
+    /*================*/
+    protected $data;
+    /*================*/
 
     public function __construct()
     {
@@ -29,38 +29,39 @@ class Source{
         $this->systemFile = (object)json_decode(file_get_contents($this->systemPath), true);
         //тип системы хранения
         $this->typeSource = $this->systemFile->dataSource;
-
-        if($this->typeSource == 'redis'){
-            $this->initialRedis();
-        }else {
-            $this->initialFile();
-        }
     }
 
     //загрузка данных о фигурах из файла
-    public function initialFile()
+    public function getFromFile()
     {
-        $this->pieces = $pieces = json_decode(file_get_contents($this->dataSourcePath), true);
-        if(!empty($this->pieces)){
-            return $this->typeSource;
+        $data = $this->data = json_decode(file_get_contents($this->dataSourcePath), true);
+        if(!empty($data)){
+            return $data;
         }
         return false;
     }
 
     //создание объекта Redis и загрузка данных из хранилища redis
-    public function initialRedis()
+    public function getFromRedis()
     {
         try{
             $this->redis = new Predis\Client();
             $this->redisKey = 'key';
-            $this->pieces = json_decode($this->redis->get($this->redisKey),true);
-            if(!empty($this->pieces)){
-                return $this->typeSource;
-            }
+            return json_decode($this->redis->get($this->redisKey),true);
         }catch (Exception $e){
             //в случае ошибки грузим фигуры из файла
             $this->setSystemData(null, 'file');
-            $this->initialFile();
+            $this->getFromFile();
+        }
+    }
+
+    //загрузка данных о фигурах из файла
+    public function getData()
+    {
+        if($this->typeSource == 'redis') {
+            return $this->getFromRedis();
+        }else{
+            return $this->getFromFile();
         }
     }
 
@@ -75,24 +76,7 @@ class Source{
         $types = ['file', 'redis'];
         if(!empty($type)){
             if($type != $this->typeSource && in_array($type, $types)){
-                $this->setSystemData(null, $type);
-                $this->typeSource = $type;
-                $cur_pieces = $this->pieces;
-                switch ($type){
-                    case 'file':
-                        $this->initialFile();
-                        $this->setPieces($cur_pieces);
-                        $this->redis = null;
-                    case 'redis':
-                        $this->initialRedis();
-                        $this->setPieces($cur_pieces);
-                    default:
-                        $this->initialFile();
-                        $this->typeSource = 'file';
-                        $this->setPieces($cur_pieces);
-                        $this->redis = null;
-                }
-                $this->pieces = $cur_pieces;
+                return $this->setSystemData(null, $type);
             }
         }
         return false;
@@ -114,6 +98,7 @@ class Source{
     {
         return $this->systemFile;
     }
+
     public function getPieces()
     {
         return $this->pieces;

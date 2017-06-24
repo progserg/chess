@@ -2,14 +2,15 @@ $(function () {
     //добавление фигуры
     $('table.add-piece tbody td button').on('click', function () {
         var type = $(this).closest('tbody').find('tr td select#type').val();
+        var name = $(this).closest('tbody').find('tr td input#insert-name').val();
         var posX = parseInt($(this).closest('tbody').find('tr td select#posX').val());
         var posY = parseInt($(this).closest('tbody').find('tr td select#posY').val());
         var color = $(this).closest('tbody').find('tr td select#color').val();
         var piece = {
-            "name": "piece_" + posX + posY,
+            "name": name,
             "type": type,
-            "posX": posX * 50,
-            "posY": posY * 50,
+            "posX": posX,
+            "posY": posY,
             "color": color
         };
         $.post('/index.php', {"action": "add", "piece": JSON.stringify(piece)}, function (data) {
@@ -28,8 +29,8 @@ $(function () {
         var posY = parseInt($(this).closest('tbody').find('tr td select#move-posY').val());
         var piece = {
             "name": name,
-            "posX": posX * 50,
-            "posY": posY * 50,
+            "posX": posX,
+            "posY": posY
         };
         $.post('/index.php', {"action": "move", "piece": JSON.stringify(piece)}, function (data) {
             location.replace('/');
@@ -40,10 +41,9 @@ $(function () {
     //удаление фигуры
     $('table.del-piece tbody td button').on('click', function () {
         var name = $(this).closest('tbody').find('tr td select#del-name').val();
-        var piece = {
-            "name": name
-        };
-        $.post('/index.php', {"action": "del", "piece": JSON.stringify(piece)}, function (data) {
+
+        $.post('/index.php', {"action": "del", "name": name}, function (data) {
+            //alert(data);
             location.replace('/');
         });
         return false;

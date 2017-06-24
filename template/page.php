@@ -19,6 +19,7 @@
             <thead>
                 <tr>
                     <th>Тип фигуры</th>
+                    <th>Название</th>
                     <th>Позиция по X</th>
                     <th>Позиция по Y</th>
                     <th>Цвет</th>
@@ -29,13 +30,16 @@
                 <tr>
                     <td>
                         <select name="type" id="type">
-                            <option value="pawn">pawn</option>
-                            <option value="rook">rook</option>
-                            <option value="knight">knight</option>
-                            <option value="bishop">bishop</option>
-                            <option value="queen">queen</option>
-                            <option value="king">king</option>
+                            <option value="Pawn">pawn</option>
+                            <option value="Rook">rook</option>
+                            <option value="Knight">knight</option>
+                            <option value="Bishop">bishop</option>
+                            <option value="Queen">queen</option>
+                            <option value="King">king</option>
                         </select>
+                    </td>
+                    <td>
+                        <input type="text" placeholder="Пешка" id="insert-name">
                     </td>
                     <td>
                         <select name="posX" id="posX">

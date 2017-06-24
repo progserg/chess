@@ -1,89 +1,152 @@
 <?php
 
-//класс Фигура и её методы
-class Piece
+class Pieces
 {
+    protected $source;
+    protected $pieces;
+    protected $data;
 
+    public function __construct($name = '')
+    {
+        $this->source = new Source();
+        $this->pieces = $this->getAllPieces();
+    }
+
+    public function changeSource($type)
+    {
+        $this->source->changeSource($type);
+    }
+
+    protected function createPiece($type, $name, $color, $posX, $posY)
+    {
+        if (!empty($type) && !empty($name) && !empty($color) && $posX >= 0 && $posY >= 0) {
+            return $piece = new $type($name, $color, $posX, $posY);
+        }
+        return false;
+    }
+
+    public function addPiece($type = null, $name = null, $color = null, $posX = null, $posY = null)
+    {
+        if(!empty($type) && is_array($type)){
+            $name = $type['name'];
+            $color = $type['color'];
+            $posX = $type['posX'];
+            $posY = $type['posY'];
+            $type = $type['type'];
+        }
+        if (!empty($type) && !empty($name) && !empty($color) && $posX >= 0 && $posY >= 0) {
+            $piece = $this->createPiece($type, $name, $color, $posX, $posY);
+            if (!empty($piece)) {
+                $this->data[$name] = [
+                    'type' => $type,
+                    'color' => $color,
+                    'posX' => $posX,
+                    'posY' => $posY
+                ];
+                return $this->setPieces();
+            }
+        }
+        return false;
+    }
+
+    public function delPiece($name)
+    {
+        if (!empty($name) && !empty($this->data[$name])) {
+            unset($this->data[$name]);
+            return $this->setPieces();
+        }
+        return false;
+    }
+
+    public function movePiece($param = [])
+    {
+        if(!empty($param)){
+
+            if(is_numeric($param['posX']) && is_numeric($param['posY'])){
+                if (!empty($param['name']) && !empty($this->data[$param['name']])) {
+                    $this->data[$param['name']]['posX'] = $param['posX'];
+                    $this->data[$param['name']]['posY'] = $param['posY'];
+                    return $this->setPieces();
+                }
+            }
+        }
+        return false;
+    }
+
+    public function getPiece($name)
+    {
+        if (!empty($name) && !empty($this->data[$name])) {
+            return $this->data[$name];
+        }
+        return false;
+    }
+
+    public function getAllPieces()
+    {
+        $this->data = $this->source->getData();
+        if (!empty($this->data)) {
+            foreach ($this->data as $key => $value) {
+                $this->pieces[$key] = new $value['type']($key, $value['color'], $value['posX'], $value['posY']);
+            }
+            return $this->pieces;
+        }
+        return false;
+    }
+    public function setPieces()
+    {
+        return $this->source->setPieces($this->data);
+    }
+}
+
+abstract class Piece
+{
+    public $name;
     public $color;
     public $posX;
     public $posY;
-    protected $allowed_types;
-    public $name;
-    public $type;
-    protected $source;
-    protected $pieces;
 
-    public function __construct($source)
+    public function __construct($name = 'pawn', $color, $posX, $posY)
     {
-        //получили экземпляр объекта source
-        $this->source = (object)$source;
-        //получили фигуры
-        $this->pieces = $this->source->getPieces();
+        $this->name = $name;
+        $this->color = $color;
+        $this->posX = $posX;
+        $this->posY = $posY;
     }
 
-    //добавление фигуры
-    public function add($piece)
+    public function movePiece($name)
     {
-        //если фигуры есть
-        if (count($this->pieces) > 0) {
-            //проверяем, есть ли уже такая фигура
-            if ($this->exists((array)$piece, $this->pieces)) {
-                //если есть, то ничего не добавляем
-                return false;
-            }
-        }
-        //добавляем фигуру в массив
-        $this->pieces[] = (object)$piece;
+        if (!empty($name)) {
 
-        //сохраняем данные о фигурах
-        if ($this->source->setPieces($this->pieces)) {
-            if ($piece->type == 'pawn') {
-                return 'Пешка добавлена';
-            }
-            return true;
-        }
-        return false;
-    }
-
-    //удаление фигуры
-    public function del($piece)
-    {
-        $piece = (object)$piece;
-        //перебираем все фигуры
-        foreach ($this->pieces as $key => $item) {
-            $item = (object)$item;
-            if ($item->name == $piece->name) { //если есть фигура с похожим именем
-                unset($this->pieces[$key]);     //удаляем ее из массива
-                break;
-            }
-        }
-        //пишем в систему хранения
-        return $this->source->setPieces($this->pieces);
-    }
-
-    //перемещение фигуры
-    public function move($piece)
-    {
-        $piece = (object)$piece;
-        foreach ($this->pieces as $key => $item) {
-            $item = (object)$item;
-            if ($item->name == $piece->name) {      //если есть фигура с таким именем, обновляем ей данные
-                $this->pieces[$key]['name'] = 'piece_' . ($piece->posX / 50) . ($piece->posY / 50);
-                $this->pieces[$key]['posX'] = $piece->posX;
-                $this->pieces[$key]['posY'] = $piece->posY;
-                //пишем в систему хранения
-                return $this->source->setPieces($this->pieces);
-            }
         }
     }
+}
 
-    //проверка наличия фигуры
-    public function exists($piece)
-    {
-        //проверяется соответствие объекта полностью
-        if (in_array($piece, $this->pieces)) {
-            return true;
-        }
-        return false;
-    }
+class Pawn extends Piece
+{
+
+}
+
+class Rook extends Piece
+{
+
+}
+
+class Knight extends Piece
+{
+
+}
+
+class Bishop extends Piece
+{
+
+}
+
+class Queen extends Piece
+{
+
+}
+
+class King extends Piece
+{
+
 }
